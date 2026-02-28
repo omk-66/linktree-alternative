@@ -1,6 +1,6 @@
 "use client"
 
-import { getFullUserProfile } from "@/lib/db"
+import { useState, useEffect } from "react"
 import { SOCIAL_PLATFORMS } from "@/types"
 import { Instagram, Youtube, Twitter, Github, Linkedin, Facebook, Twitch, MessageCircle, Send, Mail, Globe } from "lucide-react"
 import { motion } from "framer-motion"
@@ -25,63 +25,76 @@ export default function PublicPage() {
     const params = useParams()
     const username = params?.username as string
 
-    // For now, we'll do client-side fetching - in production you'd use server components
-    // But since this needs to work with the DB, let's fetch on mount
     const [profile, setProfile] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (username) {
             fetch(`/api/username?username=${encodeURIComponent(username)}`)
                 .then(res => res.json())
                 .then(data => {
+                    if (data.error) {
+                        setError(data.error)
+                    }
                     setProfile(data)
                     setLoading(false)
                 })
-                .catch(() => setLoading(false))
+                .catch((err) => {
+                    console.error("Error fetching profile:", err)
+                    setError("Failed to load profile")
+                    setLoading(false)
+                })
         }
     }, [username])
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="animate-pulse flex flex-col items-center">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
                 </div>
             </div>
         )
     }
 
-    if (!profile || profile.error) {
+    if (error || !profile || profile.error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
                     <h1 className="text-4xl font-bold text-gray-800 mb-4">404</h1>
-                    <p className="text-gray-600">User not found</p>
+                    <p className="text-gray-600">{error || "User not found"}</p>
+                    <p className="text-sm text-gray-400 mt-2">Username: {username}</p>
                 </div>
             </div>
         )
     }
 
     const user = profile
-    const theme = user.theme || {
-        backgroundColor: "#000000",
-        buttonColor: "#ffffff",
-        buttonTextColor: "#000000",
+    // Default theme with proper text color contrast
+    const defaultTheme = {
+        backgroundColor: "#ffffff",
+        buttonColor: "#000000",
+        buttonTextColor: "#ffffff",
         buttonRadius: "8px",
         fontFamily: "Inter, sans-serif",
-        buttonStyle: "filled",
-        buttonSize: "medium",
-        textColor: "#ffffff",
+        buttonStyle: "filled" as const,
+        buttonSize: "medium" as const,
+        textColor: "#000000",
     }
+    const theme = user.theme || defaultTheme
+
+    // Ensure textColor is always set properly
+    const textColor = theme.textColor || "#000000"
 
     // Generate keyframes for the floating animation
     const floatingKeyframes = `
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
-  `
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    `
 
     return (
         <div
@@ -132,7 +145,7 @@ export default function PublicPage() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
                     className="text-2xl sm:text-3xl font-bold mb-2"
-                    style={{ color: theme.textColor }}
+                    style={{ color: textColor }}
                 >
                     {user.displayName || `@${user.username}`}
                 </motion.h1>
@@ -143,7 +156,7 @@ export default function PublicPage() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
                     className="text-sm opacity-70"
-                    style={{ color: theme.textColor }}
+                    style={{ color: textColor }}
                 >
                     @{user.username}
                 </motion.p>
@@ -155,7 +168,7 @@ export default function PublicPage() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.5 }}
                         className="mt-3 text-sm max-w-xs mx-auto opacity-80"
-                        style={{ color: theme.textColor }}
+                        style={{ color: textColor }}
                     >
                         {user.bio}
                     </motion.p>
@@ -163,14 +176,14 @@ export default function PublicPage() {
             </motion.div>
 
             {/* Social Links */}
-            {user.socialLinks && user.socialLinks.filter((s: any) => s.visible).length > 0 && (
+            {user.socialLinks && user.socialLinks.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6, duration: 0.5 }}
                     className="flex justify-center gap-4 mb-8 flex-wrap"
                 >
-                    {user.socialLinks.filter((s: any) => s.visible).map((social: any, index: number) => {
+                    {user.socialLinks.map((social: any, index: number) => {
                         const IconComponent = socialIcons[social.platform] || Globe
                         const platformInfo = SOCIAL_PLATFORMS.find(p => p.platform === social.platform)
 
@@ -202,7 +215,7 @@ export default function PublicPage() {
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="w-full max-w-md space-y-4"
             >
-                {user.links && user.links.filter((l: any) => l.visible).map((link: any, index: number) => {
+                {user.links && user.links.map((link: any, index: number) => {
                     const buttonStyle = theme.buttonStyle === 'filled' ? {
                         background: theme.buttonColor,
                         color: theme.buttonTextColor,
@@ -252,6 +265,12 @@ export default function PublicPage() {
                         </motion.a>
                     )
                 })}
+
+                {(!user.links || user.links.length === 0) && (
+                    <p className="text-center opacity-50" style={{ color: textColor }}>
+                        No links yet
+                    </p>
+                )}
             </motion.div>
 
             {/* Footer */}
@@ -263,7 +282,7 @@ export default function PublicPage() {
             >
                 <p
                     className="text-xs opacity-40"
-                    style={{ color: theme.textColor }}
+                    style={{ color: textColor }}
                 >
                     Made with LinkTree
                 </p>
@@ -271,5 +290,3 @@ export default function PublicPage() {
         </div>
     )
 }
-
-import { useState, useEffect } from "react"

@@ -234,8 +234,8 @@ export default function Dashboard() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all ${activeTab === tab.id
-                  ? "bg-blue-50 text-blue-600 font-medium"
-                  : "text-gray-600 hover:bg-gray-50"
+                ? "bg-blue-50 text-blue-600 font-medium"
+                : "text-gray-600 hover:bg-gray-50"
                 }`}
             >
               <tab.icon size={20} />
@@ -247,7 +247,7 @@ export default function Dashboard() {
         <div className="p-4 border-t border-gray-200 space-y-2">
           <button
             onClick={copyLink}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             {copied ? <CheckCircle size={18} className="text-green-500" /> : <Copy size={18} />}
             {copied ? "Copied!" : "Copy Link"}
@@ -292,8 +292,8 @@ export default function Dashboard() {
                 onClick={save}
                 disabled={saving}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${saved
-                    ? "bg-green-500 text-white"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "bg-green-500 text-white"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
               >
                 {saving ? (
@@ -340,7 +340,7 @@ export default function Dashboard() {
                               type="text"
                               value={user.username}
                               onChange={e => updateUser({ username: e.target.value })}
-                              className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                             />
                           </div>
                         </div>
@@ -353,7 +353,7 @@ export default function Dashboard() {
                             type="text"
                             value={user.displayName}
                             onChange={e => updateUser({ displayName: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                           />
                         </div>
 
@@ -365,7 +365,7 @@ export default function Dashboard() {
                             value={user.bio}
                             onChange={e => updateUser({ bio: e.target.value })}
                             rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-black"
                             placeholder="Tell people about yourself..."
                           />
                         </div>
@@ -403,7 +403,7 @@ export default function Dashboard() {
                               placeholder="Image URL (e.g., https://example.com/photo.jpg)"
                               value={user.profilePictureUrl || ""}
                               onChange={e => updateUser({ profilePictureUrl: e.target.value })}
-                              className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                              className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                             />
                           )}
                         </div>
@@ -439,7 +439,7 @@ export default function Dashboard() {
                               value={link.url}
                               onChange={e => updateLink(link.id, "url", e.target.value)}
                               placeholder="https://example.com"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                             />
                           </div>
                           <div className="flex items-center gap-2">
@@ -498,7 +498,7 @@ export default function Dashboard() {
                                     value={social.url}
                                     onChange={e => updateSocialLink(social.id, "url", e.target.value)}
                                     placeholder="https://"
-                                    className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                                   />
                                 </div>
                                 <button
@@ -529,8 +529,8 @@ export default function Dashboard() {
                               onClick={() => !isAdded && addSocialLink(platform.platform as SocialPlatform)}
                               disabled={isAdded}
                               className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all ${isAdded
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : "bg-gray-50 hover:bg-gray-100 text-gray-700 hover:scale-105"
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-gray-50 hover:bg-gray-100 text-gray-700 hover:scale-105"
                                 }`}
                             >
                               <IconComponent size={20} />
@@ -700,8 +700,8 @@ export default function Dashboard() {
                                   key={style}
                                   onClick={() => updateTheme("buttonStyle", style)}
                                   className={`w-full px-3 py-2 rounded-lg text-sm capitalize ${user.theme.buttonStyle === style
-                                      ? "bg-blue-50 text-blue-600 border-2 border-blue-500"
-                                      : "bg-gray-50 text-gray-600 border-2 border-transparent"
+                                    ? "bg-blue-50 text-blue-600 border-2 border-blue-500"
+                                    : "bg-gray-50 text-gray-600 border-2 border-transparent"
                                     }`}
                                 >
                                   {style}
@@ -720,8 +720,8 @@ export default function Dashboard() {
                                   key={size}
                                   onClick={() => updateTheme("buttonSize", size)}
                                   className={`w-full px-3 py-2 rounded-lg text-sm capitalize ${user.theme.buttonSize === size
-                                      ? "bg-blue-50 text-blue-600 border-2 border-blue-500"
-                                      : "bg-gray-50 text-gray-600 border-2 border-transparent"
+                                    ? "bg-blue-50 text-blue-600 border-2 border-blue-500"
+                                    : "bg-gray-50 text-gray-600 border-2 border-transparent"
                                     }`}
                                 >
                                   {size}

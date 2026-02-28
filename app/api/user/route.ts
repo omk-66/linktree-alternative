@@ -90,6 +90,13 @@ export async function POST(request: Request) {
             });
         }
 
+        // Normalize URL - remove duplicate protocols
+        const normalizeUrl = (url: string) => {
+            if (!url) return url;
+            // Remove duplicate protocols (https://https:// or http://http://)
+            return url.replace(/^(https?:\/\/)+/i, 'https://');
+        };
+
         // Handle links if provided
         if (links && Array.isArray(links)) {
             const profile = await getFullUserProfileById(authUser.id);
@@ -103,16 +110,17 @@ export async function POST(request: Request) {
             }
 
             for (const link of links) {
+                const normalizedUrl = normalizeUrl(link.url);
                 if (link.id && existingLinkIds.has(parseInt(link.id))) {
                     await updateLink(parseInt(link.id), authUser.id, {
                         title: link.title,
-                        url: link.url,
+                        url: normalizedUrl,
                         visible: link.visible,
                     });
                 } else if (link.title && link.url) {
                     await createLink(authUser.id, {
                         title: link.title,
-                        url: link.url,
+                        url: normalizedUrl,
                     });
                 }
             }
@@ -131,16 +139,17 @@ export async function POST(request: Request) {
             }
 
             for (const social of socialLinks) {
+                const normalizedUrl = normalizeUrl(social.url);
                 if (social.id && existingSocialIds.has(parseInt(social.id))) {
                     await updateSocialLink(parseInt(social.id), authUser.id, {
                         platform: social.platform,
-                        url: social.url,
+                        url: normalizedUrl,
                         visible: social.visible,
                     });
                 } else if (social.platform && social.url) {
                     await createSocialLink(authUser.id, {
                         platform: social.platform,
-                        url: social.url,
+                        url: normalizedUrl,
                     });
                 }
             }

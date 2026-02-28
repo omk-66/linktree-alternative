@@ -11,9 +11,12 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Username is required" }, { status: 400 });
         }
 
+        console.log("Fetching profile for username:", username);
+
         const profile = await getFullUserProfile(username);
 
         if (!profile) {
+            console.log("Profile not found for:", username);
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
@@ -37,6 +40,6 @@ export async function GET(request: Request) {
         });
     } catch (error) {
         console.error("Get username error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 });
     }
 }
