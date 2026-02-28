@@ -72,7 +72,7 @@ export default function PublicPage() {
     }
 
     const user = profile
-    // Default theme with proper text color contrast
+    // Default theme with black text for better readability
     const defaultTheme = {
         backgroundColor: "#ffffff",
         buttonColor: "#000000",
@@ -85,8 +85,8 @@ export default function PublicPage() {
     }
     const theme = user.theme || defaultTheme
 
-    // Ensure textColor is always set properly
-    const textColor = theme.textColor || "#000000"
+    // Ensure textColor is always readable - default to black
+    const textColor = theme.textColor === "#ffffff" || !theme.textColor ? "#000000" : theme.textColor
 
     // Generate keyframes for the floating animation
     const floatingKeyframes = `
@@ -119,7 +119,7 @@ export default function PublicPage() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                        className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden shadow-lg"
+                        className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden shadow-xl ring-4 ring-white/20"
                         style={{
                             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                             animation: "float 3s ease-in-out infinite"
@@ -186,11 +186,19 @@ export default function PublicPage() {
                     {user.socialLinks.map((social: any, index: number) => {
                         const IconComponent = socialIcons[social.platform] || Globe
                         const platformInfo = SOCIAL_PLATFORMS.find(p => p.platform === social.platform)
+                        // Handle relative URLs - prepend https:// if needed
+                        const getAbsoluteUrl = (url: string) => {
+                            if (!url) return '#';
+                            if (url.startsWith('http://') || url.startsWith('https://')) {
+                                return url;
+                            }
+                            return 'https://' + url;
+                        }
 
                         return (
                             <motion.a
                                 key={social.id}
-                                href={social.url}
+                                href={getAbsoluteUrl(social.url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 initial={{ opacity: 0, y: 20 }}
@@ -239,10 +247,19 @@ export default function PublicPage() {
                         fontSize: "16px"
                     }
 
+                    // Handle relative URLs - prepend https:// if needed
+                    const getLinkUrl = (url: string) => {
+                        if (!url) return '#';
+                        if (url.startsWith('http://') || url.startsWith('https://')) {
+                            return url;
+                        }
+                        return 'https://' + url;
+                    }
+
                     return (
                         <motion.a
                             key={link.id}
-                            href={link.url}
+                            href={getLinkUrl(link.url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             initial={{ opacity: 0, x: -20 }}

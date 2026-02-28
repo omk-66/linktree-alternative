@@ -71,6 +71,9 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [pendingTab, setPendingTab] = useState<Tab | null>(null)
 
   useEffect(() => {
     checkAuth()
@@ -118,6 +121,8 @@ export default function Dashboard() {
 
   const updateUser = (updates: Partial<UserData>) => {
     setUser({ ...user, ...updates })
+    setHasUnsavedChanges(true)
+    setSaved(false)
   }
 
   const updateTheme = (key: string, value: any) => {
@@ -125,6 +130,8 @@ export default function Dashboard() {
       ...user,
       theme: { ...user.theme, [key]: value }
     })
+    setHasUnsavedChanges(true)
+    setSaved(false)
   }
 
   const addLink = () => {
@@ -132,9 +139,10 @@ export default function Dashboard() {
       ...user,
       links: [
         ...user.links,
-        { id: Date.now().toString(), title: "New Link", url: "https://", visible: true }
+        { id: Date.now().toString(), title: "New Link", url: "", visible: true }
       ]
     })
+    setHasUnsavedChanges(true)
   }
 
   const updateLink = (id: string, key: string, value: any) => {
@@ -144,6 +152,8 @@ export default function Dashboard() {
         link.id === id ? { ...link, [key]: value } : link
       )
     })
+    setHasUnsavedChanges(true)
+    setSaved(false)
   }
 
   const removeLink = (id: string) => {
@@ -151,6 +161,7 @@ export default function Dashboard() {
       ...user,
       links: user.links.filter(link => link.id !== id)
     })
+    setHasUnsavedChanges(true)
   }
 
   const addSocialLink = (platform: SocialPlatform) => {
@@ -159,9 +170,10 @@ export default function Dashboard() {
         ...user,
         socialLinks: [
           ...user.socialLinks,
-          { id: Date.now().toString(), platform, url: "https://", visible: true }
+          { id: Date.now().toString(), platform, url: "", visible: true }
         ]
       })
+      setHasUnsavedChanges(true)
     }
   }
 
@@ -172,6 +184,8 @@ export default function Dashboard() {
         social.id === id ? { ...social, [key]: value } : social
       )
     })
+    setHasUnsavedChanges(true)
+    setSaved(false)
   }
 
   const removeSocialLink = (id: string) => {
@@ -179,6 +193,7 @@ export default function Dashboard() {
       ...user,
       socialLinks: user.socialLinks.filter(s => s.id !== id)
     })
+    setHasUnsavedChanges(true)
   }
 
   const applyPreset = (index: number) => {
@@ -186,6 +201,35 @@ export default function Dashboard() {
       ...user,
       theme: { ...PRESET_THEMES[index].theme }
     })
+    setHasUnsavedChanges(true)
+    setSaved(false)
+  }
+
+  const handleTabChange = (newTab: Tab) => {
+    if (hasUnsavedChanges) {
+      setPendingTab(newTab)
+      setShowDiscardDialog(true)
+    } else {
+      setActiveTab(newTab)
+    }
+  }
+
+  const handleDiscard = () => {
+    setShowDiscardDialog(false)
+    setPendingTab(null)
+    setHasUnsavedChanges(false)
+    if (pendingTab) {
+      setActiveTab(pendingTab)
+    }
+  }
+
+  const handleSaveAndSwitch = async () => {
+    await save()
+    setShowDiscardDialog(false)
+    setPendingTab(null)
+    if (pendingTab) {
+      setActiveTab(pendingTab)
+    }
   }
 
   const save = async () => {
@@ -197,6 +241,7 @@ export default function Dashboard() {
         body: JSON.stringify(user)
       })
       setSaved(true)
+      setHasUnsavedChanges(false)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       console.error("Failed to save:", err)
@@ -222,20 +267,20 @@ export default function Dashboard() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             LinkTree
           </h1>
           <p className="text-sm text-gray-500 mt-1">Your all-in-one link page</p>
         </div>
 
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 space-y-1">
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all ${activeTab === tab.id
-                ? "bg-blue-50 text-blue-600 font-medium"
-                : "text-gray-600 hover:bg-gray-50"
+              onClick={() => handleTabChange(tab.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 ${activeTab === tab.id
+                ? "bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
             >
               <tab.icon size={20} />
@@ -244,25 +289,25 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 space-y-2">
+        <div className="p-4 border-t border-gray-200 space-y-3">
           <button
             onClick={copyLink}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg shadow-blue-600/25"
           >
-            {copied ? <CheckCircle size={18} className="text-green-500" /> : <Copy size={18} />}
+            {copied ? <CheckCircle size={18} className="text-green-300" /> : <Copy size={18} />}
             {copied ? "Copied!" : "Copy Link"}
           </button>
           <a
             href={`/${user.username}`}
             target="_blank"
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white text-gray-700 border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all"
           >
             <ExternalLink size={18} />
             View Page
           </a>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
           >
             <LogOut size={18} />
             Logout
@@ -293,7 +338,9 @@ export default function Dashboard() {
                 disabled={saving}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${saved
                   ? "bg-green-500 text-white"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : hasUnsavedChanges
+                    ? "bg-orange-500 text-white animate-pulse"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
               >
                 {saving ? (
@@ -302,6 +349,11 @@ export default function Dashboard() {
                   <>
                     <Check size={18} />
                     Saved!
+                  </>
+                ) : hasUnsavedChanges ? (
+                  <>
+                    <Save size={18} />
+                    Save Changes *
                   </>
                 ) : (
                   <>
@@ -312,7 +364,35 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Tab Content */}
+            {/* Unsaved Changes Dialog */}
+            {showDiscardDialog && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Unsaved Changes
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    You have unsaved changes. Do you want to save them before switching tabs?
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleDiscard}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Discard
+                    </button>
+                    <button
+                      onClick={handleSaveAndSwitch}
+                      disabled={saving}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      {saving ? "Saving..." : "Save & Continue"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -324,8 +404,11 @@ export default function Dashboard() {
                 {/* Profile Tab */}
                 {activeTab === "profile" && (
                   <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 mb-4">Basic Information</h3>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <UserIcon size={18} className="text-blue-600" />
+                        Basic Information
+                      </h3>
 
                       <div className="space-y-4">
                         <div>
@@ -372,11 +455,14 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 mb-4">Profile Picture</h3>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <UserIcon size={18} className="text-blue-600" />
+                        Profile Picture
+                      </h3>
 
                       <div className="flex items-center gap-4">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+                        <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
                           {user.showProfilePicture && user.profilePictureUrl ? (
                             <img
                               src={user.profilePictureUrl}
@@ -438,7 +524,7 @@ export default function Dashboard() {
                               type="url"
                               value={link.url}
                               onChange={e => updateLink(link.id, "url", e.target.value)}
-                              placeholder="https://example.com"
+                              placeholder="Enter link URL (e.g., https://youtube.com)"
                               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                             />
                           </div>
@@ -474,8 +560,11 @@ export default function Dashboard() {
                 {/* Social Tab */}
                 {activeTab === "social" && (
                   <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 mb-4">Your Social Links</h3>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Share2 size={18} className="text-blue-600" />
+                        Your Social Links
+                      </h3>
 
                       {user.socialLinks.length > 0 ? (
                         <div className="space-y-3">
@@ -497,7 +586,7 @@ export default function Dashboard() {
                                     type="url"
                                     value={social.url}
                                     onChange={e => updateSocialLink(social.id, "url", e.target.value)}
-                                    placeholder="https://"
+                                    placeholder={`Enter your ${platformInfo?.label} URL`}
                                     className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                                   />
                                 </div>
@@ -516,8 +605,11 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 mb-4">Add Social Links</h3>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Share2 size={18} className="text-blue-600" />
+                        Add Social Links
+                      </h3>
                       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                         {SOCIAL_PLATFORMS.map(platform => {
                           const IconComponent = socialIcons[platform.platform] || Globe
@@ -546,8 +638,11 @@ export default function Dashboard() {
                 {/* Theme Tab */}
                 {activeTab === "theme" && (
                   <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 mb-4">Preset Themes</h3>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Palette size={18} className="text-blue-600" />
+                        Preset Themes
+                      </h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {PRESET_THEMES.map((preset, index) => (
                           <button
@@ -570,8 +665,11 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 mb-4">Customize Theme</h3>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Palette size={18} className="text-blue-600" />
+                        Customize Theme
+                      </h3>
 
                       <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
@@ -763,7 +861,7 @@ export default function Dashboard() {
                 {/* Profile Section */}
                 <div className="text-center mb-6">
                   {user.showProfilePicture ? (
-                    <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold mb-3 overflow-hidden">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold mb-3 overflow-hidden">
                       {user.profilePictureUrl ? (
                         <img
                           src={user.profilePictureUrl}

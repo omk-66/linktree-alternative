@@ -90,11 +90,15 @@ export async function POST(request: Request) {
             });
         }
 
-        // Normalize URL - remove duplicate protocols
+        // Normalize URL - ensure all URLs start with https://
         const normalizeUrl = (url: string) => {
             if (!url) return url;
-            // Remove duplicate protocols (https://https:// or http://http://)
-            return url.replace(/^(https?:\/\/)+/i, 'https://');
+            // If URL already has http or https, just fix duplicate protocols
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return url.replace(/^(https?:\/\/)+/i, 'https://');
+            }
+            // If URL doesn't have http/https, add https://
+            return 'https://' + url;
         };
 
         // Handle links if provided
